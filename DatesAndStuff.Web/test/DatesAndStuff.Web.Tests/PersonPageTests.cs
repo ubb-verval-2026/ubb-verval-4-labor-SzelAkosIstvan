@@ -131,6 +131,7 @@ public class PersonPageTests
     }
 
     [Test]
+    [TestCase("-10")]
     [TestCase("-11")]
     [TestCase("-15")]
     public void Person_ValueBelowMinusTenPercent_ShouldShowValidationErrors(string percentage)
@@ -141,15 +142,19 @@ public class PersonPageTests
 
         var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
         wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//*[@data-test='PersonPageNavigation']"))).Click();
-
+        
+        var salaryXPath = "//*[@data-test='DisplayedSalary']";
+        var salaryLabel = driver.FindElement(By.XPath(salaryXPath));
+        var salaryBeforeSubmission = double.Parse(salaryLabel.Text);
+        
         var inputLocator = By.CssSelector("[data-test='SalaryIncreasePercentageInput']");
         var input = wait.Until(ExpectedConditions.ElementIsVisible(inputLocator));
         input.Clear();
         input.SendKeys(percentage + Keys.Tab);
 
         // Act
-        // var submitButton = wait.Until(ExpectedConditions.ElementExists(By.XPath("//*[@data-test='SalaryIncreaseSubmitButton']")));
-        // submitButton.Click();
+        var submitButton = wait.Until(ExpectedConditions.ElementExists(By.XPath("//*[@data-test='SalaryIncreaseSubmitButton']")));
+        submitButton.Click();
 
         // Assert
         var globalError = wait.Until(ExpectedConditions.ElementExists(By.XPath("/html/body/div[1]/main/article/form/ul")));
@@ -157,6 +162,11 @@ public class PersonPageTests
 
         var fieldError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/article/form/div[2]/div/div")));
         fieldError.Displayed.Should().BeTrue();
+
+        wait.Until(d => d.FindElement(By.XPath(salaryXPath)).Text == salaryBeforeSubmission.ToString());
+        salaryLabel = driver.FindElement(By.XPath(salaryXPath));
+        var salaryAfterSubmission = double.Parse(salaryLabel.Text);
+        salaryAfterSubmission.Should().BeApproximately(salaryBeforeSubmission, 0.001);
     }
     private bool IsElementPresent(By by)
     {
