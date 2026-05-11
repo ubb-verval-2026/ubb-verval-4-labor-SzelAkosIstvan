@@ -71,7 +71,7 @@ namespace DatesAndStuff.Tests
 
                 // Assert
                 var expectedDateTime = baseDate + ts;
-                Assert.AreEqual(expectedDateTime, result.ToAbsoluteDateTime());
+                Assert.That(result.ToAbsoluteDateTime(), Is.EqualTo(expectedDateTime));
             }
 
             [Test]
