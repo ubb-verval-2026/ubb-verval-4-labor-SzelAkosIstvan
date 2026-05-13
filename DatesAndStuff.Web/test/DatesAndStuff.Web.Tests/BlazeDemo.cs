@@ -100,6 +100,10 @@ public class BlazeDemo
     [Test]
     public void FlightSearch_BetweenMexicoCityAndDublin_ShouldHaveAtLeastThreeFlights()
     {
+        double priceLimit = 3000.00;
+        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        string screenshotName = "CheapFlight_Dublin.png";
+        
         // Arrange
         driver.Navigate().GoToUrl(BaseURL);
         var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
@@ -115,10 +119,42 @@ public class BlazeDemo
         var submitButton = driver.FindElement(By.CssSelector("input.btn-primary"));
         submitButton.Click();
 
+        // Act
         wait.Until(ExpectedConditions.ElementIsVisible(By.TagName("table")));
         var flightRows = driver.FindElements(By.CssSelector("table.table tbody tr"));
 
+        bool hasCheapFlight = false;
+        foreach (var row in flightRows)
+        {
+            var cells = row.FindElements(By.TagName("td"));
+            if (cells.Count >= 6)
+            {
+                var priceText = cells[5].Text;
+                string cleanPrice = priceText.Replace("$", "").Trim();
+        
+                if (double.TryParse(cleanPrice, out double actualPrice))
+                {
+                    if (actualPrice < priceLimit)
+                    {
+                        hasCheapFlight = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (hasCheapFlight)
+        {
+            ITakesScreenshot screenshotDriver = (ITakesScreenshot)driver;
+            Screenshot screenshot = screenshotDriver.GetScreenshot();
+            string fullPath = Path.Combine(desktopPath, screenshotName);
+            Console.WriteLine($"A kep mentve ide: {fullPath}");
+            screenshot.SaveAsFile(fullPath);
+        }
+
         int flightCount = flightRows.Count;
+        
+        // Assert
         flightCount.Should().BeGreaterThanOrEqualTo(3, $"there should be 3 flights between Mexico City and Dublin, but found {flightCount}");
     }
 }
